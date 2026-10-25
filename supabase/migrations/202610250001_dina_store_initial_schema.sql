@@ -10,7 +10,7 @@ create table if not exists public.admin_users (
   created_at timestamptz not null default now()
 );
 alter table public.admin_users enable row level security;
-grant select on public.admin_users to authenticated;
+grant select on public.admin_users to anon, authenticated;
 create policy "Admins can read their own admin record" on public.admin_users
 for select to authenticated using ((select auth.uid()) = user_id);
 
