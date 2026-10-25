@@ -10,6 +10,7 @@ URL: https://ptllrowwgjrlmmuanpyj.supabase.co
 - Orders can be submitted publicly; only admins can read or update orders.
 - Row Level Security is enabled on all public tables.
 - Only users listed in `public.admin_users` can manage catalog/campaign content.
+- Product images can be uploaded by verified admins to the `product-images` Storage bucket (maximum 5 MB per image).
 
 ## Make your account an admin
 1. In Supabase Dashboard, open Authentication > Users and create/invite the admin user using your intended admin email.
@@ -21,9 +22,11 @@ URL: https://ptllrowwgjrlmmuanpyj.supabase.co
    on conflict (user_id) do update set email = excluded.email;
    ```
    Do not let the browser create admin_users records. This table is intentionally protected.
-4. Sign in with Supabase Auth from the admin page. Do not use a hardcoded shared password.
+4. Sign in at `/admin.html` using that account's Supabase Auth password. Do not use a hardcoded shared password.
 
 ## Frontend client
+The root `index.html` is a Supabase-connected storefront with search, cart/order submission, and realtime product refresh. `admin.html` provides admin sign-in, product create/edit/delete, direct image upload, and order status updates.
+
 Load Supabase JS v2 before `supabase-client.js`, then use `window.dinaSupabase`:
 ```js
 const { data, error } = await window.dinaSupabase
@@ -43,7 +46,7 @@ const channel = window.dinaSupabase
 ```
 
 ## Netlify
-If this repository is linked to the Netlify site, new commits deploy automatically. Set the publish directory to the directory containing the actual storefront HTML. This repository currently contains only a README at its root, so the live site frontend is not yet confirmed to be in this repository. Add `supabase-client.js` to the real storefront and load the Supabase JS v2 CDN script first. Never put a service-role key in Netlify frontend variables or public files.
+`netlify.toml` is configured to publish the repository root. If the Netlify site is linked to this GitHub repository, new commits should trigger a deploy. The live Netlify site was not directly verifiable from this environment, so check the Netlify Deploys page to confirm that the repository is connected and the latest commit has deployed. Never put a service-role key in Netlify frontend variables or public files.
 
 ## Important order security
 Public order insertion is enabled for storefront checkout. For production, validate prices and stock server-side before trusting order totals; do not treat client-submitted totals as authoritative.
