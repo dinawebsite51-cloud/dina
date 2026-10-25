@@ -93,3 +93,19 @@ with check(exists(select 1 from public.admin_users a where a.user_id=(select aut
 create trigger set_updated_at before update on public.categories for each row execute function public.set_updated_at();
 create trigger set_updated_at before update on public.products for each row execute function public.set_updated_at();
 create trigger set_updated_at before update on public.orders for each row execute function public.set_updated_at();
+
+
+-- Public product image bucket; only verified admins may upload or manage objects.
+insert into storage.buckets (id,name,public,file_size_limit,allowed_mime_types)
+values ('product-images','product-images',true,5242880,array['image/jpeg','image/png','image/webp','image/gif'])
+on conflict (id) do update set public=true, file_size_limit=5242880, allowed_mime_types=array['image/jpeg','image/png','image/webp','image/gif'];
+
+create policy "Public can view product images" on storage.objects
+for select to anon, authenticated using (bucket_id='product-images');
+create policy "Admins can upload product images" on storage.objects
+for insert to authenticated with check (bucket_id='product-images' and exists (select 1 from public.admin_users a where a.user_id=(select auth.uid())));
+create policy "Admins can update product images" on storage.objects
+for update to authenticated using (bucket_id='product-images' and exists (select 1 from public.admin_users a where a.user_id=(select auth.uid())))
+with check (bucket_id='product-images' and exists (select 1 from public.admin_users a where a.user_id=(select auth.uid())));
+create policy "Admins can delete product images" on storage.objects
+for delete to authenticated using (bucket_id='product-images' and exists (select 1 from public.admin_users a where a.user_id=(select auth.uid())));
